@@ -5,3 +5,4 @@ dist/*
 pygame2macapp.py
 *.swp
 *.swo
+readme.txt
