@@ -20,6 +20,9 @@ m7 = u"-7"
 c7 = u"7"
 d7 = u"\u00BA"+"7"
 M7p = M7+u"+"
+c7b5 = u"7b5"
+M7d5 = M7+u"#5"
+M7b5 = M7+u"b5"
 # M7d11 = M7+u"\u266F"+u"11"
 # M7d9 = M7+u"\u266F"+u"9"
 
@@ -79,9 +82,9 @@ class Interface(tk.Frame):
         else:
             self.notes_buffer = notes.copy()
         self.current_note = "C"
-        self.hardcore = False
+        self.t3 = False
         self.chords = [c7, m7, M7, m7b5]
-        self.hardcore_chords = self.chords+[mM7, d7, M7p]
+        self.t3_chords = self.chords+[mM7, d7, M7d5, M7b5, c7b5]
 
         fontsize = 50
         width = 10
@@ -147,7 +150,7 @@ class Interface(tk.Frame):
 
         self.h_button = tk.Checkbutton(
             self.options,
-            text="hardcore mode (h)",
+            text="t3 mode (h)",
             bg="#ba9027",
             font=(font, 16),
             command=self.toggle_h_mode)
@@ -195,8 +198,8 @@ class Interface(tk.Frame):
         # play_obj.wait_done()
 
     def next_chords(self):
-        if self.hardcore:
-            available_chords = self.hardcore_chords
+        if self.t3:
+            available_chords = self.t3_chords
         else:
             available_chords = self.chords
         # chord 1
@@ -218,7 +221,7 @@ class Interface(tk.Frame):
         self.chord_3["bg"] = random.choice(colors_chord)
 
     def toggle_h_mode(self):
-        self.hardcore = not self.hardcore
+        self.t3 = not self.t3
         self.h_button.toggle()
 
 
