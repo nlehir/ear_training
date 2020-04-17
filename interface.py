@@ -1,6 +1,9 @@
 # coding: utf-8
+import chords
+import player
+import id_nm
+import frequencies
 import sys
-import simpleaudio as sa
 from PIL import ImageFont
 import random
 if sys.version_info < (3, 0):
@@ -8,19 +11,6 @@ if sys.version_info < (3, 0):
 else:
     import tkinter as tk
 
-m7b5 = "\N{LATIN CAPITAL LETTER O WITH STROKE}"
-M7 = "\N{GREEK CAPITAL LETTER DELTA}"+'7'
-mM7 = '-'+"\N{GREEK CAPITAL LETTER DELTA}"+'7'
-M9 = "\N{GREEK CAPITAL LETTER DELTA}"+'9'
-m7 = "-7"
-c7 = "7"
-d7 = "°7"
-c7b5 = "7b5"
-M7d5 = M7+"#5"
-M7b5 = M7+"b5"
-M7p = M7+"+"
-M7d11 = M7+"#11"
-M7d9 = M7+"#9"
 
 font_choice_1 = "./Bebas-Regular.ttf"
 font_choice_2 = "./Roboto-Condensed.ttf"
@@ -34,6 +24,8 @@ notes = ['C', 'C#', 'Db', 'D', 'D#',
          'Eb', 'E', 'F', 'F#', 'Gb',
          'G', 'G#', 'Ab', 'A', 'A#',
          'Bb', 'B']
+
+notes_ids = [x for x in range(13)]
 
 colors_note = ["#74b8cc"]
 
@@ -63,6 +55,7 @@ config_text = (
     "enter : next note & chords     "
     "n : change note     "
     "c : change chords     "
+    "p : play chords     "
     "a : play note"
 )
 
@@ -72,11 +65,12 @@ class Interface(tk.Frame):
         tk.Frame.__init__(self, fenetre)
         # self.grid_propagate(0)
         self.pack(fill=tk.BOTH)
-        self.notes_buffer = notes.copy()
-        self.current_note = "C"
+        self.notes_buffer = notes_ids.copy()
+        self.note_id = random.randint(0, 12)
+        self.note_string = id_nm.id_nm(self.note_id)
+        self.note_frequency = frequencies.frequency_from_id(self.note_id)
         self.t3 = False
-        self.chords = [c7, m7, M7, m7b5]
-        self.t3_chords = self.chords+[mM7, d7, M7d5, M7b5, c7b5]
+        self.speed = 2
 
         fontsize = 50
         width = 10
@@ -154,55 +148,38 @@ class Interface(tk.Frame):
         if len(self.notes_buffer) == 0:
             self.notes_buffer = notes.copy()
         next_note = random.choice(self.notes_buffer)
-        self.current_note = next_note
+        self.note_id = next_note
+        self.note_string = id_nm.id_nm(self.note_id)
+        self.note_frequency = frequencies.frequency_from_id(self.note_id)
         self.notes_buffer.remove(next_note)
-        self.note["text"] = self.current_note
+        self.note["text"] = self.note_string
         self.note["bg"] = random.choice(colors_note)
 
-    def get_filename(self):
-        if self.current_note == "C#":
-            parsed_note_name = "Db"
-        elif self.current_note == "D#":
-            parsed_note_name = "Eb"
-        elif self.current_note == "F#":
-            parsed_note_name = "Gb"
-        elif self.current_note == "G#":
-            parsed_note_name = "Ab"
-        elif self.current_note == "A#":
-            parsed_note_name = "Bb"
-        else:
-            parsed_note_name = self.current_note
-        filename = "./"+parsed_note_name+".wav"
-        return filename
-
     def play_note(self):
-        filename = self.get_filename()
-        wave_obj = sa.WaveObject.from_wave_file(filename)
-        play_obj = wave_obj.play()
-        play_obj.wait_done()
+        """
+            cast float to list for convenience
+        """
+        frequency = [self.note_frequency]
+        player.play_sequence(frequency, 1)
+
+    def play_chords(self):
+        player.play_sequence(self.freq_seq, self.speed)
 
     def next_chords(self):
-        if self.t3:
-            available_chords = self.t3_chords
-        else:
-            available_chords = self.chords
-        # chord 1
-        text1 = random.choice(arrows)+random.choice(available_chords)
-        text1 += " "+random.choice(positions)
-        self.chord_1["text"] = text1
+        c1 = chords.Chord(self.t3)
+        self.chord_1["text"] = c1.text
         self.chord_1["bg"] = random.choice(colors_chord)
 
-        # chord 2
-        text2 = random.choice(arrows)+random.choice(available_chords)
-        text2 += " "+random.choice(positions)
-        self.chord_2["text"] = text2
+        c3 = chords.Chord(self.t3)
+        self.chord_3["text"] = c3.text
+        self.chord_3["bg"] = random.choice(colors_chord)
+
+        c2 = chords.Chord(self.t3)
+        self.chord_2["text"] = c2.text
         self.chord_2["bg"] = random.choice(colors_chord)
 
-        # chord 3
-        text3 = random.choice(arrows)+random.choice(available_chords)
-        text3 += " "+random.choice(positions)
-        self.chord_3["text"] = text3
-        self.chord_3["bg"] = random.choice(colors_chord)
+        # generate frequencies sequence
+        self.freq_seq = frequencies.frequencies_seq(self.note_id, c1, c2, c3)
 
     def toggle_h_mode(self):
         self.t3 = not self.t3
@@ -216,6 +193,10 @@ def next_note(event):
 
 def play_note(event):
     interface.play_note()
+
+
+def play_chords(event):
+    interface.play_chords()
 
 
 def next_chords(event):
@@ -241,6 +222,7 @@ interface = Interface(fenetre)
 fenetre.bind('<Return>', next_all)
 fenetre.bind('<n>', next_note)
 fenetre.bind('<c>', next_chords)
+fenetre.bind('<p>', play_chords)
 fenetre.bind('<h>', switch_h_mode)
 fenetre.bind('<a>', play_note)
 fenetre.bind('<q>', quit_ex)
