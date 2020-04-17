@@ -1,11 +1,11 @@
 ---
 python 3
 ---
-
-python3 ear_training_python_3.py
+python3 interface.py
 
 ---
-python 2
+libs
 ---
-
-python ear_training_python_2.py
+Pillow
+numpy
+sounddevice
